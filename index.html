@@ -2040,8 +2040,15 @@ if (!Store.persistent) $('#storageBanner').hidden = false;
 setView('train');
 
 if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+  /* When an update takes over an already-controlled page, reload once to show it. */
+  var hadController = !!navigator.serviceWorker.controller, reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (!hadController || reloaded) return;
+    reloaded = true;
+    window.location.reload();
+  });
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function () { /* fine — the app works without it */ });
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function () { /* fine — the app works without it */ });
   });
 }
 })();
