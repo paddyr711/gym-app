@@ -1,11 +1,15 @@
-/* Cache-first app shell. Bump CACHE when you change any file. */
-var CACHE = 'home-gym-v5';
+/* Network-first app shell: always load the latest version when online,
+   fall back to the cached copy offline. Bump CACHE when you change any file. */
+var CACHE = 'home-gym-v6';
 var SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () {
-    return self.skipWaiting();
-  }));
+  /* Cache each file on its own so one missing file can't block the update. */
+  e.waitUntil(caches.open(CACHE).then(function (c) {
+    return Promise.all(SHELL.map(function (url) {
+      return c.add(new Request(url, { cache: 'reload' })).catch(function () {});
+    }));
+  }).then(function () { return self.skipWaiting(); }));
 });
 
 self.addEventListener('activate', function (e) {
@@ -18,12 +22,16 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then(function (hit) {
-      return hit || fetch(e.request).then(function (res) {
+    fetch(e.request, { cache: 'no-cache' }).then(function (res) {
+      if (res.ok) {
         var copy = res.clone();
         caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
-        return res;
-      }).catch(function () { return caches.match('./index.html'); });
+      }
+      return res;
+    }).catch(function () {
+      return caches.match(e.request).then(function (hit) {
+        return hit || caches.match('./index.html');
+      });
     })
   );
 });
