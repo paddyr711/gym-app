@@ -1036,7 +1036,11 @@ function buildSession(dayIndex) {
     wod: day.wod || '',
     started: new Date().toISOString(),
     sentiment: null,
-    exercises: day.items.map(function (item) { return newSessionItem(item, prog); })
+    exercises: day.items.map(function (item, i) {
+      var e = newSessionItem(item, prog);
+      e.src = i; /* which programme item this came from, for permanent swaps */
+      return e;
+    })
   };
 }
 function ensureSession() {
@@ -1659,6 +1663,49 @@ function openSwap(u) {
   input.addEventListener('input', function () { swapState.q = input.value.toLowerCase(); renderSwapList(); });
 }
 
+/* Index of the programme item a session exercise came from, or -1. */
+function programmeItemFor(e) {
+  var day = state.program[state.session.day];
+  if (!day || state.session.prog !== state.meta.programme) return -1;
+  var items = day.items;
+  if (typeof e.src === 'number' && items[e.src]) return e.src;
+  for (var i = 0; i < items.length; i++) if (items[i].ex === e.ex) return i;
+  return -1;
+}
+
+function openSwapScope(e, newId) {
+  var from = (EX_BY_ID[e.ex] || {}).name || 'this exercise';
+  var to = (EX_BY_ID[newId] || {}).name || 'the new exercise';
+  var dayLabel = state.program.length > 1 ? 'Day ' + (state.session.day + 1) : 'this programme';
+  openSheet('<h2>Swap to ' + esc(to) + '?</h2>' +
+    '<p class="body-s">Replacing ' + esc(from) + '.</p>' +
+    '<div class="sheet-list" style="margin-top:12px">' +
+      '<button class="rowbtn" data-act="swapscope" data-scope="today">' + icon('swap') +
+        '<span>Just for today<small>' + esc(from) + ' comes back next time</small></span></button>' +
+      '<button class="rowbtn" data-act="swapscope" data-scope="always">' + icon('down') +
+        '<span>Make it permanent<small>Updates ' + esc(dayLabel) + ' for every future workout</small></span></button>' +
+    '</div>');
+}
+
+function applySwap(e, newId, permanent) {
+  if (permanent) {
+    var idx = programmeItemFor(e);
+    if (idx > -1) {
+      state.program[state.session.day].items[idx].ex = newId;
+      e.src = idx;
+      saveProgram();
+    }
+  }
+  e.ex = newId;
+  var lp = lastPerformance(newId, state.session.prog);
+  e.sets.forEach(function (st) {
+    st.done = false;
+    st.w = isCheckoff(newId) ? null : (lp && lp.set ? lp.set.w : null);
+  });
+  saveSession(); closeSheet(); renderTrain();
+  toast((EX_BY_ID[newId] || {}).name + (permanent ? ' saved to your programme' : ' for today'));
+}
+
 function renderSwapList() {
   var e = findEx(swapState.uid);
   var current = e ? e.ex : null;
@@ -1895,16 +1942,16 @@ document.addEventListener('click', function (ev) {
         break;
       }
       var target = findEx(swapState.uid);
-      if (target) {
-        target.ex = btn.dataset.id;
-        var lp = lastPerformance(target.ex, state.session.prog);
-        target.sets.forEach(function (st2) {
-          st2.done = false;
-          st2.w = isCheckoff(target.ex) ? null : (lp && lp.set ? lp.set.w : null);
-        });
-        saveSession();
-      }
-      closeSheet(); renderTrain();
+      if (!target || target.ex === btn.dataset.id) { closeSheet(); break; }
+      swapState.pick = btn.dataset.id;
+      /* Exercises added today have no programme slot, so the swap is today-only. */
+      if (programmeItemFor(target) < 0) applySwap(target, swapState.pick, false);
+      else openSwapScope(target, swapState.pick);
+      break;
+    }
+    case 'swapscope': {
+      var st3 = findEx(swapState.uid);
+      if (st3 && swapState.pick) applySwap(st3, swapState.pick, btn.dataset.scope === 'always');
       break;
     }
     case 'sentiment':
@@ -1941,13 +1988,14 @@ document.addEventListener('click', function (ev) {
     }
     case 'savelayout': {
       var sess2 = state.session;
-      state.program[sess2.day].items = sess2.exercises.map(function (e2) {
+      state.program[sess2.day].items = sess2.exercises.map(function (e2, i2) {
+        e2.src = i2;
         var item = { ex: e2.ex, sets: e2.sets.length, reps: e2.sets[0] ? e2.sets[0].r : '8', su: !!e2.su };
         if (e2.t) item.t = e2.t;
         if (e2.ph) item.ph = e2.ph;
         return item;
       });
-      saveProgram(); closeSheet();
+      saveProgram(); saveSession(); closeSheet();
       toast(state.program.length > 1 ? 'Day ' + (sess2.day + 1) + ' updated' : 'Layout saved');
       break;
     }
