@@ -609,7 +609,7 @@ var EXERCISES = [
   x('bw_glute_bridge', 'Glute Bridge', 'warmup', 'bw'),
   x('bw_wgs', "World's Greatest Stretch", 'warmup', 'bw'),
   x('bw_calf_raise', 'Calf Raise', 'accessory', 'bw', '', { calves: 1 }),
-  x('bw_run_5k', '5km Run', 'cardio', 'bw', 'Run it after the lifts so the bench stays heavy. Tick it off when you finish.'),
+  x('bw_run_5k', '5km Run', 'cardio', 'bw', 'Run it after the lifts so the bench stays heavy. Log your time, then tick it off.'),
   x('bw_pigeon', 'Pigeon Pose', 'warmdown', 'bw', 'Ninety seconds a side.'),
   x('bw_couch', 'Couch Stretch', 'warmdown', 'bw'),
   x('bw_hamstring', 'Hamstring Stretch', 'warmdown', 'bw'),
@@ -671,6 +671,15 @@ function phaseOfItem(e) {
 function isCheckoff(exId) {
   var ex = EX_BY_ID[exId];
   return !!ex && (ex.type === 'warmup' || ex.type === 'warmdown' || ex.type === 'cardio');
+}
+/* Cardio is logged as a time, kept in the reps slot as m:ss. */
+function isTimed(exId) {
+  var ex = EX_BY_ID[exId];
+  return !!ex && ex.type === 'cardio';
+}
+function timeParts(r) {
+  var m = String(r == null ? '' : r).match(/^(\d+):(\d{2})$/);
+  return m ? { min: String(parseInt(m[1], 10)), sec: m[2] } : { min: '', sec: '' };
 }
 
 /* ============================================================
@@ -1053,6 +1062,19 @@ var REP_OPTIONS = (function () {
   for (var r = 1; r <= 50; r++) out += '<option value="' + r + '">&times; ' + r + '</option>';
   return out + '</optgroup>';
 })();
+var MIN_OPTIONS = (function () {
+  var out = '<option value="">— min</option>';
+  for (var m = 0; m <= 90; m++) out += '<option value="' + m + '">' + m + ' min</option>';
+  return out;
+})();
+var SEC_OPTIONS = (function () {
+  var out = '<option value="">— sec</option>';
+  for (var sc = 0; sc < 60; sc++) {
+    var v = (sc < 10 ? '0' : '') + sc;
+    out += '<option value="' + v + '">' + v + ' sec</option>';
+  }
+  return out;
+})();
 
 /* ============================================================
    6. SESSION
@@ -1191,6 +1213,11 @@ function renderTrain() {
       var r = row.querySelector('[data-act="reps"]');
       if (w) setSelect(w, st.w == null ? '' : String(st.w));
       if (r) setSelect(r, st.r == null ? '' : String(st.r));
+      var mn = row.querySelector('[data-act="min"]'), sc = row.querySelector('[data-act="sec"]');
+      if (mn && sc) {
+        var tp = timeParts(st.r);
+        mn.value = tp.min; sc.value = tp.sec;
+      }
     });
   });
 }
@@ -1240,14 +1267,20 @@ function cardHtml(e, ssIndex) {
   if (last && last.set && last.set.w != null && !checkoff) {
     meta = 'Last: ' + fmtWeight(last.set.w) + ' × ' + esc(last.set.r) + ' · ' + relDate(last.date);
   }
+  if (isTimed(e.ex) && last && last.set && timeParts(last.set.r).min) {
+    meta = 'Last: ' + last.set.r + ' · ' + relDate(last.date);
+  }
   if (e.t) meta = 'Tempo ' + e.t + ' · ' + meta;
 
   var rows = '';
   e.sets.forEach(function (st, i) {
     rows += '<div class="set-row' + (st.done ? ' done' : '') + '" data-set="' + i + '">' +
       '<div class="set-no"><i class="plate" style="background:' + (checkoff ? 'var(--plate-0)' : plateColor(st.w)) + '"></i>' + (i + 1) + '</div>';
-    if (checkoff) {
-      rows += '<div class="checkoff">' + (ex.type === 'cardio' ? 'Tick when done' : 'Bodyweight') + '</div>';
+    if (isTimed(e.ex)) {
+      rows += '<div class="field"><select data-act="min" aria-label="Minutes">' + MIN_OPTIONS + '</select></div>' +
+              '<div class="field"><select data-act="sec" aria-label="Seconds">' + SEC_OPTIONS + '</select></div>';
+    } else if (checkoff) {
+      rows += '<div class="checkoff">Bodyweight</div>';
     } else {
       rows += '<div class="field"><select data-act="weight" aria-label="Weight for set ' + (i + 1) + '">' + WEIGHT_OPTIONS + '</select></div>' +
               '<div class="field"><select data-act="reps" aria-label="Reps for set ' + (i + 1) + '">' + REP_OPTIONS + '</select></div>';
@@ -1882,6 +1915,9 @@ document.addEventListener('change', function (ev) {
   if (sel.dataset.act === 'weight') {
     st.w = sel.value === '' ? null : parseFloat(sel.value);
     row.querySelector('.plate').style.background = plateColor(st.w);
+  } else if (sel.dataset.act === 'min' || sel.dataset.act === 'sec') {
+    var mn = row.querySelector('[data-act="min"]').value, sc = row.querySelector('[data-act="sec"]').value;
+    st.r = mn === '' && sc === '' ? '1' : (mn || '0') + ':' + (sc || '00');
   } else {
     st.r = sel.value;
   }
@@ -2038,7 +2074,7 @@ document.addEventListener('click', function (ev) {
       var sess2 = state.session;
       state.program[sess2.day].items = sess2.exercises.map(function (e2, i2) {
         e2.src = i2;
-        var item = { ex: e2.ex, sets: e2.sets.length, reps: e2.sets[0] ? e2.sets[0].r : '8', su: !!e2.su };
+        var item = { ex: e2.ex, sets: e2.sets.length, reps: isTimed(e2.ex) ? '1' : (e2.sets[0] ? e2.sets[0].r : '8'), su: !!e2.su };
         if (e2.t) item.t = e2.t;
         if (e2.ph) item.ph = e2.ph;
         return item;
