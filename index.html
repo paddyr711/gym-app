@@ -471,7 +471,7 @@ nav.bottom .tab[aria-selected="true"] .pill{background:var(--primary-container);
 /* ============================================================
    1. EQUIPMENT + EXERCISE DATABASE
    Every exercise is bound to one category of owned equipment.
-   type: compound | accessory | power | warmup | warmdown
+   type: compound | accessory | power | warmup | warmdown | cardio
    ============================================================ */
 var CATEGORIES = {
   rack:  'Squat rack, barbell & plates',
@@ -609,6 +609,7 @@ var EXERCISES = [
   x('bw_glute_bridge', 'Glute Bridge', 'warmup', 'bw'),
   x('bw_wgs', "World's Greatest Stretch", 'warmup', 'bw'),
   x('bw_calf_raise', 'Calf Raise', 'accessory', 'bw', '', { calves: 1 }),
+  x('bw_run_5k', '5km Run', 'cardio', 'bw', 'Run it after the lifts so the bench stays heavy. Log your time, then tick it off.'),
   x('bw_pigeon', 'Pigeon Pose', 'warmdown', 'bw', 'Ninety seconds a side.'),
   x('bw_couch', 'Couch Stretch', 'warmdown', 'bw'),
   x('bw_hamstring', 'Hamstring Stretch', 'warmdown', 'bw'),
@@ -650,8 +651,8 @@ var PHASES = [
   { key: 'activation',  label: 'Activation',  color: '#4FA96B', types: ['warmup'] },
   { key: 'strength',    label: 'Strength',    color: '#F5C543', types: ['power', 'compound'] },
   { key: 'accessories', label: 'Accessories', color: '#3F72D8', types: ['accessory'] },
-  /* No exercise type maps here: a programme item opts in with ph: 'conditioning'. */
-  { key: 'conditioning', label: 'Conditioning', color: '#D8483F', types: [] },
+  /* Circuit stations opt in with ph: 'conditioning'; steady runs land here by type. */
+  { key: 'conditioning', label: 'Conditioning', color: '#D8483F', types: ['cardio'] },
   { key: 'cooldown',    label: 'Cool down',   color: '#D5C5A1', types: ['warmdown'] }
 ];
 var PHASE_OF_TYPE = {}, PHASE_BY_KEY = {};
@@ -669,7 +670,16 @@ function phaseOfItem(e) {
 }
 function isCheckoff(exId) {
   var ex = EX_BY_ID[exId];
-  return !!ex && (ex.type === 'warmup' || ex.type === 'warmdown');
+  return !!ex && (ex.type === 'warmup' || ex.type === 'warmdown' || ex.type === 'cardio');
+}
+/* Cardio is logged as a time, kept in the reps slot as m:ss. */
+function isTimed(exId) {
+  var ex = EX_BY_ID[exId];
+  return !!ex && ex.type === 'cardio';
+}
+function timeParts(r) {
+  var m = String(r == null ? '' : r).match(/^(\d+):(\d{2})$/);
+  return m ? { min: String(parseInt(m[1], 10)), sec: m[2] } : { min: '', sec: '' };
 }
 
 /* ============================================================
@@ -696,18 +706,18 @@ var STRENGTH_DAYS = [
     items: [
       s('bd_lateral_walk', 2, '15'), s('bd_tke', 2, '15'), s('bw_glute_bridge', 2, '12'),
       s('bb_power_clean', 5, '3'), s('bb_back_squat', 4, '5'), s('bb_hip_thrust', 3, '8'),
-      s('hp_reverse_hyper', 3, '12'), s('db_row', 3, '10'), s('bb_shrug', 3, '12'),
+      s('db_row', 3, '10', true), s('bb_ohp', 3, '6'),
+      s('hp_reverse_hyper', 3, '12'), s('bb_shrug', 3, '12', true), s('db_hammer_curl', 3, '12'),
       s('ball_glute_roll', 1, '1'), s('bw_pigeon', 1, '1'), s('bw_hamstring', 1, '1')
     ]
   },
   {
-    title: 'Pressing Power & Forearms',
+    title: 'Pressing Power & 5km Run',
     items: [
       s('pel_spin', 1, '1'), s('bd_pull_apart', 2, '15'), s('bd_dislocate', 2, '10'),
       s('plyo_pushup', 4, '5'), s('bb_bench', 4, '5', true), s('ca_lat_pulldown', 4, '10'),
-      s('bb_ohp', 3, '6'), s('bb_rdl', 3, '8'),
-      s('db_lateral_raise', 3, '12'), s('db_hammer_curl', 3, '12'), s('bb_wrist_curl', 3, '15'),
-      s('ball_pec_roll', 1, '1'), s('ball_tspine', 1, '1'), s('bw_couch', 1, '1')
+      s('bw_run_5k', 1, '1'),
+      s('bw_couch', 1, '1')
     ]
   },
   {
@@ -715,7 +725,8 @@ var STRENGTH_DAYS = [
     items: [
       s('bd_monster_walk', 2, '15'), s('bd_glute_bridge', 2, '12'), s('bw_deadbug', 2, '10'),
       s('bw_vertical_jump', 4, '3'), s('bb_deadlift', 4, '3'), s('db_bulgarian', 3, '8'),
-      s('db_shoulder_press', 3, '10'), s('bd_face_pull', 3, '15'), s('hp_back_ext', 3, '12'),
+      s('db_shoulder_press', 3, '10'), s('bd_face_pull', 3, '15', true), s('db_lateral_raise', 3, '12'),
+      s('hp_back_ext', 3, '12'), s('bb_wrist_curl', 3, '15'),
       s('ball_foot_roll', 1, '1'), s('bw_9090', 1, '1'), s('bw_pigeon', 1, '1')
     ]
   }
@@ -871,9 +882,55 @@ if (!state.programs) {
   if (Array.isArray(legacyProgram) && legacyProgram.length) state.programs.strength = legacyProgram;
 }
 normalizeMeta(state.meta);
+migrateStrengthRun();
 if (state.session && !state.session.prog) state.session.prog = 'strength';
 if (state.session && state.session.prog !== state.meta.programme) state.meta.programme = state.session.prog;
 loadProgramme(state.meta.programme);
+
+/* Day 2 of 3-Day Strength became a 5km run day, and the lifts it dropped moved
+   to Days 1 and 3. Saved strength days are patched by exercise id, once, so any
+   swaps already saved to a day are kept. */
+function migrateStrengthRun() {
+  var days = state.programs.strength;
+  if (state.meta.strengthRun || !Array.isArray(days) || days.length !== 3) {
+    state.meta.strengthRun = true;
+    return;
+  }
+  function at(items, id) {
+    for (var i = 0; i < items.length; i++) if (items[i].ex === id) return i;
+    return -1;
+  }
+  function cooldownAt(items) {
+    for (var i = 0; i < items.length; i++) if (phaseOfItem(items[i]).key === 'cooldown') return i;
+    return items.length;
+  }
+  /* Puts item after the anchor exercise (linked to it as a superset when asked),
+     or just before the cool-down when the anchor was swapped out. */
+  function add(items, item, anchor, link) {
+    if (at(items, item.ex) !== -1) return;
+    var a = at(items, anchor);
+    if (a === -1) { items.splice(cooldownAt(items), 0, item); return; }
+    if (link) items[a].su = true;
+    items.splice(a + 1, 0, item);
+  }
+  var d1 = days[0].items, d2 = days[1].items, d3 = days[2].items;
+  add(d1, s('bb_ohp', 3, '6'), 'db_row', true);
+  add(d1, s('db_hammer_curl', 3, '12'), 'bb_shrug', true);
+  ['bb_ohp', 'bb_rdl', 'db_lateral_raise', 'db_hammer_curl', 'bb_wrist_curl', 'ball_pec_roll', 'ball_tspine'].forEach(function (id) {
+    var i = at(d2, id);
+    if (i !== -1) d2.splice(i, 1);
+  });
+  /* A superset link would otherwise reach across to whatever now follows. */
+  var pull = at(d2, 'ca_lat_pulldown');
+  if (pull !== -1) d2[pull].su = false;
+  if (at(d2, 'bw_run_5k') === -1) d2.splice(cooldownAt(d2), 0, s('bw_run_5k', 1, '1'));
+  if (days[1].title === 'Pressing Power & Forearms') days[1].title = STRENGTH_DAYS[1].title;
+  add(d3, s('db_lateral_raise', 3, '12'), 'bd_face_pull', true);
+  add(d3, s('bb_wrist_curl', 3, '15'), 'hp_back_ext', false);
+  state.meta.strengthRun = true;
+  Store.set(K.programs, state.programs);
+  Store.set(K.meta, state.meta);
+}
 
 /* Older meta only knew one programme: lastDay belonged to the strength days. */
 function normalizeMeta(meta) {
@@ -1004,6 +1061,19 @@ var REP_OPTIONS = (function () {
   out += '</optgroup><optgroup label="Reps">';
   for (var r = 1; r <= 50; r++) out += '<option value="' + r + '">&times; ' + r + '</option>';
   return out + '</optgroup>';
+})();
+var MIN_OPTIONS = (function () {
+  var out = '<option value="">— min</option>';
+  for (var m = 0; m <= 90; m++) out += '<option value="' + m + '">' + m + ' min</option>';
+  return out;
+})();
+var SEC_OPTIONS = (function () {
+  var out = '<option value="">— sec</option>';
+  for (var sc = 0; sc < 60; sc++) {
+    var v = (sc < 10 ? '0' : '') + sc;
+    out += '<option value="' + v + '">' + v + ' sec</option>';
+  }
+  return out;
 })();
 
 /* ============================================================
@@ -1143,6 +1213,11 @@ function renderTrain() {
       var r = row.querySelector('[data-act="reps"]');
       if (w) setSelect(w, st.w == null ? '' : String(st.w));
       if (r) setSelect(r, st.r == null ? '' : String(st.r));
+      var mn = row.querySelector('[data-act="min"]'), sc = row.querySelector('[data-act="sec"]');
+      if (mn && sc) {
+        var tp = timeParts(st.r);
+        mn.value = tp.min; sc.value = tp.sec;
+      }
     });
   });
 }
@@ -1192,13 +1267,19 @@ function cardHtml(e, ssIndex) {
   if (last && last.set && last.set.w != null && !checkoff) {
     meta = 'Last: ' + fmtWeight(last.set.w) + ' × ' + esc(last.set.r) + ' · ' + relDate(last.date);
   }
+  if (isTimed(e.ex) && last && last.set && timeParts(last.set.r).min) {
+    meta = 'Last: ' + last.set.r + ' · ' + relDate(last.date);
+  }
   if (e.t) meta = 'Tempo ' + e.t + ' · ' + meta;
 
   var rows = '';
   e.sets.forEach(function (st, i) {
     rows += '<div class="set-row' + (st.done ? ' done' : '') + '" data-set="' + i + '">' +
       '<div class="set-no"><i class="plate" style="background:' + (checkoff ? 'var(--plate-0)' : plateColor(st.w)) + '"></i>' + (i + 1) + '</div>';
-    if (checkoff) {
+    if (isTimed(e.ex)) {
+      rows += '<div class="field"><select data-act="min" aria-label="Minutes">' + MIN_OPTIONS + '</select></div>' +
+              '<div class="field"><select data-act="sec" aria-label="Seconds">' + SEC_OPTIONS + '</select></div>';
+    } else if (checkoff) {
       rows += '<div class="checkoff">Bodyweight</div>';
     } else {
       rows += '<div class="field"><select data-act="weight" aria-label="Weight for set ' + (i + 1) + '">' + WEIGHT_OPTIONS + '</select></div>' +
@@ -1400,7 +1481,7 @@ function analyze(days) {
       var n = e.sets.length;
       if (ex.type === 'warmup' || ex.type === 'warmdown') { mobility += n; return; }
       if (ex.type === 'power') { powerSets += n; return; }
-      if (ex.category === 'bike' || e.ph === 'conditioning') { conditioning += n; return; }
+      if (ex.category === 'bike' || ex.type === 'cardio' || e.ph === 'conditioning') { conditioning += n; return; }
       working += n;
       Object.keys(ex.muscles).forEach(function (k) {
         if (!(k in vol)) return;
@@ -1834,6 +1915,9 @@ document.addEventListener('change', function (ev) {
   if (sel.dataset.act === 'weight') {
     st.w = sel.value === '' ? null : parseFloat(sel.value);
     row.querySelector('.plate').style.background = plateColor(st.w);
+  } else if (sel.dataset.act === 'min' || sel.dataset.act === 'sec') {
+    var mn = row.querySelector('[data-act="min"]').value, sc = row.querySelector('[data-act="sec"]').value;
+    st.r = mn === '' && sc === '' ? '1' : (mn || '0') + ':' + (sc || '00');
   } else {
     st.r = sel.value;
   }
@@ -1990,7 +2074,7 @@ document.addEventListener('click', function (ev) {
       var sess2 = state.session;
       state.program[sess2.day].items = sess2.exercises.map(function (e2, i2) {
         e2.src = i2;
-        var item = { ex: e2.ex, sets: e2.sets.length, reps: e2.sets[0] ? e2.sets[0].r : '8', su: !!e2.su };
+        var item = { ex: e2.ex, sets: e2.sets.length, reps: isTimed(e2.ex) ? '1' : (e2.sets[0] ? e2.sets[0].r : '8'), su: !!e2.su };
         if (e2.t) item.t = e2.t;
         if (e2.ph) item.ph = e2.ph;
         return item;

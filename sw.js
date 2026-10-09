@@ -1,5 +1,5 @@
 /* Cache-first app shell. Bump CACHE when you change any file. */
-var CACHE = 'home-gym-v5';
+var CACHE = 'home-gym-v6';
 var SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', function (e) {
