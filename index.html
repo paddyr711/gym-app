@@ -221,6 +221,20 @@ nav.bottom .tab[aria-selected="true"] .pill{background:var(--primary-container);
   border-radius:5px;padding:2px 5px;margin-right:7px;vertical-align:2px;
 }
 
+/* ---------- Programme picker ---------- */
+.prog-btn{
+  width:100%;min-height:56px;margin:0 0 10px;padding:8px 14px;border-radius:var(--r-m);
+  background:var(--surface-container-low);border:1px solid var(--outline-variant);
+  display:flex;align-items:center;gap:12px;text-align:left;color:var(--on-surface-variant);
+}
+.prog-btn .grow{flex:1;min-width:0}
+.prog-btn b{display:block;font-size:16px;font-weight:650;color:var(--on-surface)}
+.prog-btn:hover{background:var(--surface-container)}
+.prog-guide{margin:0 0 14px}
+.note.wod{margin:0 0 10px;color:var(--on-surface);border-color:var(--phase-c)}
+.add-ex{width:100%;justify-content:center;min-height:var(--tap);margin:0 0 20px}
+.empty + .add-ex{margin-top:12px}
+
 /* ---------- Finish block ---------- */
 .finish{background:var(--surface-container-low);border-radius:var(--r-l);padding:18px 16px;margin-top:8px}
 .sentiments{display:flex;gap:8px;margin:12px 0 16px}
@@ -498,6 +512,8 @@ var EXERCISES = [
   x('bb_reverse_curl', 'Reverse Curl', 'accessory', 'rack', 'Forearm work. Slow on the way down.', { forearms: 1, biceps: 0.5 }),
   x('bb_wrist_curl', 'Barbell Wrist Curl', 'accessory', 'rack', 'Full stretch at the bottom, squeeze at the top.', { forearms: 1 }),
   x('bb_bar_hang', 'Bar Hang', 'warmdown', 'rack'),
+  x('bb_thruster', 'Barbell Thruster', 'compound', 'rack', 'Front squat straight into a press. Use the legs to drive the bar.', { quads: 1, front_delts: 1, glutes: 0.5, triceps: 0.5 }),
+  x('bb_toes_to_bar', 'Toes-to-Bar', 'accessory', 'rack', 'Hang from the pull-up bar. Kip if you need to keep moving.', { abs: 1, lats: 0.5, forearms: 0.5 }),
 
   /* --- Adjustable dumbbells & bench --- */
   x('db_bench', 'Dumbbell Bench Press', 'compound', 'db', '', { chest: 1, triceps: 0.5, front_delts: 0.5 }),
@@ -519,6 +535,10 @@ var EXERCISES = [
   x('db_step_up', 'Bench Step-Up', 'accessory', 'db', '', { quads: 1, glutes: 1 }),
   x('db_farmer_carry', 'Farmer Carry', 'accessory', 'db', 'Log reps as lengths walked. Grip work.', { forearms: 1, upper_back: 0.5, abs: 0.5 }),
   x('db_calf_raise', 'Dumbbell Calf Raise', 'accessory', 'db', '', { calves: 1 }),
+  x('db_thruster', 'Dumbbell Thruster', 'compound', 'db', 'Dumbbells on the shoulders, squat and press in one movement.', { quads: 1, front_delts: 1, glutes: 0.5, triceps: 0.5 }),
+  x('db_snatch', 'Dumbbell Snatch', 'power', 'db', 'Alternate arms each rep. Hips drive the bell, the arm only guides it.', { glutes: 1, hams: 0.5, front_delts: 0.5, upper_back: 0.5 }),
+  x('db_swing', 'Dumbbell Swing', 'power', 'db', 'Hold one dumbbell by the head. Hinge and snap the hips, do not squat it.', { glutes: 1, hams: 1, lower_back: 0.5 }),
+  x('db_devil_press', 'Devil Press', 'power', 'db', 'Burpee onto the dumbbells, then swing them overhead in one pull.', { glutes: 0.5, front_delts: 0.5, chest: 0.5, hams: 0.5 }),
 
   /* --- Freak Athlete Hyper Pro --- */
   x('hp_back_ext', '45\u00b0 Back Extension', 'accessory', 'hyper', '', { lower_back: 1, glutes: 0.5, hams: 0.5 }),
@@ -532,6 +552,7 @@ var EXERCISES = [
   x('pel_spin', 'Easy Spin', 'warmup', 'bike', 'Five minutes, low resistance, just get warm.'),
   x('pel_intervals', 'Bike Intervals', 'accessory', 'bike', 'Log reps as intervals completed.'),
   x('pel_flush', 'Recovery Spin', 'warmdown', 'bike'),
+  x('pel_cals', 'Bike Calories', 'accessory', 'bike', 'Log reps as calories. High resistance, hard effort.'),
 
 
   /* --- Single-stack cable pulley (one stack: unilateral or alternating) --- */
@@ -580,6 +601,9 @@ var EXERCISES = [
   /* --- Bodyweight --- */
   x('bw_vertical_jump', 'Vertical Jump', 'power', 'bw', 'Max intent every rep. Reset fully between jumps.', { quads: 1, calves: 1, glutes: 0.5 }),
   x('bw_pushup', 'Push-Up', 'accessory', 'bw', '', { chest: 1, triceps: 0.5, front_delts: 0.5 }),
+  x('bw_burpee', 'Burpee', 'accessory', 'bw', 'Chest to the floor, jump and clap overhead.', { chest: 0.5, quads: 0.5 }),
+  x('bw_air_squat', 'Air Squat', 'accessory', 'bw', '', { quads: 1, glutes: 0.5 }),
+  x('bw_lunge', 'Walking Lunge', 'accessory', 'bw', 'Count each leg as one rep. Hold dumbbells to make it harder.', { quads: 1, glutes: 1 }),
   x('bw_plank', 'Plank', 'accessory', 'bw', 'Log reps as seconds held.', { abs: 1 }),
   x('bw_deadbug', 'Dead Bug', 'warmup', 'bw'),
   x('bw_glute_bridge', 'Glute Bridge', 'warmup', 'bw'),
@@ -626,13 +650,22 @@ var PHASES = [
   { key: 'activation',  label: 'Activation',  color: '#4FA96B', types: ['warmup'] },
   { key: 'strength',    label: 'Strength',    color: '#F5C543', types: ['power', 'compound'] },
   { key: 'accessories', label: 'Accessories', color: '#3F72D8', types: ['accessory'] },
+  /* No exercise type maps here: a programme item opts in with ph: 'conditioning'. */
+  { key: 'conditioning', label: 'Conditioning', color: '#D8483F', types: [] },
   { key: 'cooldown',    label: 'Cool down',   color: '#D5C5A1', types: ['warmdown'] }
 ];
-var PHASE_OF_TYPE = {};
-PHASES.forEach(function (p) { p.types.forEach(function (t) { PHASE_OF_TYPE[t] = p; }); });
+var PHASE_OF_TYPE = {}, PHASE_BY_KEY = {};
+PHASES.forEach(function (p) {
+  PHASE_BY_KEY[p.key] = p;
+  p.types.forEach(function (t) { PHASE_OF_TYPE[t] = p; });
+});
 function phaseOf(exId) {
   var ex = EX_BY_ID[exId];
   return (ex && PHASE_OF_TYPE[ex.type]) || PHASES[1];
+}
+/* A session item can override the phase its exercise type implies. */
+function phaseOfItem(e) {
+  return (e.ph && PHASE_BY_KEY[e.ph]) || phaseOf(e.ex);
 }
 function isCheckoff(exId) {
   var ex = EX_BY_ID[exId];
@@ -640,12 +673,24 @@ function isCheckoff(exId) {
 }
 
 /* ============================================================
-   3. THE PROGRAM — 3-day full body
+   3. THE PROGRAMMES
    ============================================================ */
-/* su: true means "supersetted with the next exercise in the same phase". */
-function s(id, sets, reps, su) { return { ex: id, sets: sets, reps: reps, su: !!su }; }
+/* su: true means "supersetted with the next exercise in the same phase".
+   t is a tempo in seconds: lowering - pause - lifting - squeeze. */
+function s(id, sets, reps, su, t) {
+  var item = { ex: id, sets: sets, reps: reps, su: !!su };
+  if (t) item.t = t;
+  return item;
+}
+/* A conditioning station. Sets are rounds; su chains the stations into one circuit. */
+function c(id, rounds, reps, su) {
+  var item = s(id, rounds, reps, su);
+  item.ph = 'conditioning';
+  return item;
+}
 
-var DEFAULT_PROGRAM = [
+/* --- 3-day full body strength (the original programme) --- */
+var STRENGTH_DAYS = [
   {
     title: 'Explosive Pulls & Glute Builder',
     items: [
@@ -676,6 +721,107 @@ var DEFAULT_PROGRAM = [
   }
 ];
 
+/* --- 3-day bodybuilding: moderate loads, higher reps, slow eccentrics --- */
+var HYPERTROPHY_DAYS = [
+  {
+    title: 'Chest, Back & Arms',
+    items: [
+      s('bd_pull_apart', 2, '15'), s('bd_dislocate', 2, '10'),
+      s('db_incline', 4, '10-12', false, '3-1-1-0'), s('ca_lat_pulldown', 4, '10-12', false, '3-0-1-1'),
+      s('db_bulgarian', 3, '10-12', false, '3-1-1-0'),
+      s('ca_fly', 3, '12-15', true, '3-0-1-2'), s('db_pullover', 3, '12-15', false, '3-1-1-0'),
+      s('db_lateral_raise', 3, '15', false, '2-0-1-1'),
+      s('ca_curl', 3, '12-15', true, '3-0-1-1'), s('ca_pushdown', 3, '12-15', false, '3-0-1-1'),
+      s('ball_pec_roll', 1, '1'), s('bw_couch', 1, '1')
+    ]
+  },
+  {
+    title: 'Legs & Shoulders',
+    items: [
+      s('bd_lateral_walk', 2, '15'), s('bw_glute_bridge', 2, '12'),
+      s('bb_back_squat', 4, '10-12', false, '4-1-1-0'), s('bb_rdl', 3, '10-12', false, '3-1-1-0'),
+      s('db_shoulder_press', 3, '10-12', false, '3-0-1-0'),
+      s('hp_hip_ext', 3, '15', false, '2-0-1-2'),
+      s('ca_lateral_raise', 3, '15-20', true, '2-0-1-1'), s('ca_rear_fly', 3, '15-20', false, '2-0-1-1'),
+      s('db_calf_raise', 4, '12-15', false, '2-2-1-1'), s('ca_crunch', 3, '15', false, '2-0-1-1'),
+      s('bw_pigeon', 1, '1'), s('bw_hamstring', 1, '1')
+    ]
+  },
+  {
+    title: 'Press, Row & Glutes',
+    items: [
+      s('bd_monster_walk', 2, '15'), s('bd_pull_apart', 2, '15'),
+      s('db_bench', 4, '10-12', false, '3-1-1-0'), s('ca_row', 4, '10-12', false, '3-0-1-2'),
+      s('bb_hip_thrust', 3, '12-15', false, '2-0-1-2'),
+      s('db_goblet_squat', 3, '15', false, '3-1-1-0'), s('ca_face_pull', 3, '15', false, '2-0-1-1'),
+      s('db_hammer_curl', 3, '10-12', true, '3-0-1-0'), s('ca_overhead_tri', 3, '12', false, '3-1-1-0'),
+      s('ball_tspine', 1, '1'), s('bw_9090', 1, '1')
+    ]
+  }
+];
+
+/* --- 3-day CrossFit-style: a strength block, then a conditioning circuit --- */
+var CONDITIONING_DAYS = [
+  {
+    title: 'Squat & Engine',
+    wod: '5 rounds for time. Move straight between stations, rest only when you must.',
+    items: [
+      s('pel_spin', 1, '1'), s('bw_wgs', 2, '5'), s('bd_lateral_walk', 2, '15'),
+      s('bb_front_squat', 5, '5'), s('bb_pullup', 4, '6-8'),
+      c('db_thruster', 5, '12', true), c('box_jump', 5, '10', true), c('pel_cals', 5, '12'),
+      s('pel_flush', 1, '1'), s('bw_couch', 1, '1')
+    ]
+  },
+  {
+    title: 'Hinge & Sprint',
+    wod: 'EMOM 16 minutes. One station per minute, four times through.',
+    items: [
+      s('bd_monster_walk', 2, '15'), s('bd_pull_apart', 2, '15'), s('bw_deadbug', 2, '10'),
+      s('bb_deadlift', 5, '3'), s('bb_push_press', 4, '5'),
+      c('db_swing', 4, '15', true), c('bw_burpee', 4, '10', true), c('bb_toes_to_bar', 4, '10', true), c('pel_cals', 4, '12'),
+      s('ball_glute_roll', 1, '1'), s('bw_hamstring', 1, '1')
+    ]
+  },
+  {
+    title: 'Clean & Chipper',
+    wod: '4 rounds for time. Rest one minute between rounds.',
+    items: [
+      s('pel_spin', 1, '1'), s('bd_dislocate', 2, '10'), s('bw_wgs', 2, '5'),
+      s('bb_power_clean', 5, '3'), s('bb_bench', 4, '5'),
+      c('db_snatch', 4, '10', true), c('bw_lunge', 4, '20', true), c('bw_pushup', 4, '15', true), c('pel_cals', 4, '15'),
+      s('ball_tspine', 1, '1'), s('bw_pigeon', 1, '1')
+    ]
+  }
+];
+
+var PROGRAMMES = [
+  {
+    id: 'strength', name: '3-Day Strength', blurb: 'Full body · power and heavy compounds',
+    days: STRENGTH_DAYS
+  },
+  {
+    id: 'hypertrophy', name: '3-Day Bodybuilding', blurb: 'Full body · higher reps with tempo',
+    guide: 'Tempo is seconds lowering, pausing, lifting and squeezing at the top, so 3-1-1-0 means three seconds down. ' +
+      'Pick a weight you can control for every rep and stop one or two reps short of failure. Rest 60 to 90 seconds.',
+    days: HYPERTROPHY_DAYS
+  },
+  {
+    id: 'conditioning', name: '3-Day CrossFit', blurb: 'Full body · strength then a conditioning circuit',
+    guide: 'Lift the strength block with full rest. In the conditioning circuit each set is one round: tick it off as you finish each station.',
+    days: CONDITIONING_DAYS
+  },
+  {
+    id: 'free', name: 'Free Workout', blurb: 'Build your own from scratch',
+    guide: 'Starts empty. Tap Add exercise to build the session from any kit you own. ' +
+      'To keep it for next time, open Settings and save today’s layout.',
+    days: [{ title: 'Free Workout', items: [] }]
+  }
+];
+var PROG_BY_ID = {};
+PROGRAMMES.forEach(function (p) { PROG_BY_ID[p.id] = p; });
+function programme(id) { return PROG_BY_ID[id] || PROGRAMMES[0]; }
+function defaultDays(id) { return programme(id).days; }
+
 /* ============================================================
    4. STORAGE — localStorage with an in-memory fallback
    ============================================================ */
@@ -705,20 +851,53 @@ var Store = (function () {
   };
 })();
 
-var K = { program: 'hg.program.v1', history: 'hg.history.v1', session: 'hg.session.v1', meta: 'hg.meta.v1' };
+/* hg.program.v1 held the single original programme; it is read once and
+   migrated into hg.programs.v1, which holds edited days per programme id. */
+var K = { program: 'hg.program.v1', programs: 'hg.programs.v1', history: 'hg.history.v1', session: 'hg.session.v1', meta: 'hg.meta.v1' };
 
 var state = {
-  program: Store.get(K.program, null) || clone(DEFAULT_PROGRAM),
+  programs: Store.get(K.programs, null),
   history: Store.get(K.history, []),
   session: Store.get(K.session, null),
-  meta: Store.get(K.meta, { lastDay: null }),
+  meta: Store.get(K.meta, null) || {},
   view: 'train',
   calMonth: startOfMonth(new Date()),
   coachWindow: 7,
   openLog: null
 };
+if (!state.programs) {
+  state.programs = {};
+  var legacyProgram = Store.get(K.program, null);
+  if (Array.isArray(legacyProgram) && legacyProgram.length) state.programs.strength = legacyProgram;
+}
+normalizeMeta(state.meta);
+if (state.session && !state.session.prog) state.session.prog = 'strength';
+if (state.session && state.session.prog !== state.meta.programme) state.meta.programme = state.session.prog;
+loadProgramme(state.meta.programme);
 
-function saveProgram() { Store.set(K.program, state.program); }
+/* Older meta only knew one programme: lastDay belonged to the strength days. */
+function normalizeMeta(meta) {
+  if (!PROG_BY_ID[meta.programme]) meta.programme = 'strength';
+  if (!meta.lastDayBy) {
+    meta.lastDayBy = {};
+    if (meta.lastDay != null) meta.lastDayBy.strength = meta.lastDay;
+  }
+  delete meta.lastDay;
+  return meta;
+}
+/* state.program is always the active programme's (possibly edited) days. */
+function loadProgramme(id) {
+  state.meta.programme = programme(id).id;
+  if (!Array.isArray(state.programs[state.meta.programme]) || !state.programs[state.meta.programme].length) {
+    state.programs[state.meta.programme] = clone(defaultDays(state.meta.programme));
+  }
+  state.program = state.programs[state.meta.programme];
+}
+
+function saveProgram() {
+  state.programs[state.meta.programme] = state.program;
+  Store.set(K.programs, state.programs);
+}
 function saveHistory() { Store.set(K.history, state.history); }
 function saveSession() { Store.set(K.session, state.session); }
 function saveMeta() { Store.set(K.meta, state.meta); }
@@ -789,10 +968,13 @@ function sentiment(key) {
   return SENTIMENTS[1];
 }
 
-/* Prefill from the last time this exercise was logged. */
-function lastPerformance(exId) {
+/* Prefill from the last time this exercise was logged. Pass a programme id to
+   look only in that programme, so a 5-rep squat weight never lands on a
+   12-rep tempo set. */
+function lastPerformance(exId, prog) {
   for (var i = state.history.length - 1; i >= 0; i--) {
     var w = state.history[i];
+    if (prog && w.prog !== prog) continue;
     for (var j = 0; j < w.exercises.length; j++) {
       var e = w.exercises[j];
       if (e.ex !== exId) continue;
@@ -828,29 +1010,37 @@ var REP_OPTIONS = (function () {
    6. SESSION
    ============================================================ */
 function suggestedDay() {
-  if (state.meta.lastDay == null) return 0;
-  return (state.meta.lastDay + 1) % state.program.length;
+  var last = state.meta.lastDayBy[state.meta.programme];
+  if (last == null) return 0;
+  return (last + 1) % state.program.length;
+}
+function newSessionItem(item, prog) {
+  var last = lastPerformance(item.ex, prog);
+  var prefill = last && last.set && last.set.w != null ? last.set.w : null;
+  var sets = [];
+  for (var i = 0; i < item.sets; i++) {
+    sets.push({ w: isCheckoff(item.ex) ? null : prefill, r: item.reps, done: false });
+  }
+  var e = { uid: uid(), ex: item.ex, sets: sets, su: !!item.su };
+  if (item.t) e.t = item.t;
+  if (item.ph) e.ph = item.ph;
+  return e;
 }
 function buildSession(dayIndex) {
   var day = state.program[dayIndex];
+  var prog = state.meta.programme;
   return {
+    prog: prog,
     day: dayIndex,
     title: day.title,
+    wod: day.wod || '',
     started: new Date().toISOString(),
     sentiment: null,
-    exercises: day.items.map(function (item) {
-      var last = lastPerformance(item.ex);
-      var prefill = last && last.set && last.set.w != null ? last.set.w : null;
-      var sets = [];
-      for (var i = 0; i < item.sets; i++) {
-        sets.push({ w: isCheckoff(item.ex) ? null : prefill, r: item.reps, done: false });
-      }
-      return { uid: uid(), ex: item.ex, sets: sets, su: !!item.su };
-    })
+    exercises: day.items.map(function (item) { return newSessionItem(item, prog); })
   };
 }
 function ensureSession() {
-  if (state.session && state.program[state.session.day]) return;
+  if (state.session && state.session.prog === state.meta.programme && state.program[state.session.day]) return;
   state.session = buildSession(suggestedDay());
   saveSession();
 }
@@ -880,26 +1070,37 @@ function renderTrain() {
   ensureSession();
   var sess = state.session;
   var counts = sessionCounts(sess);
+  var prog = programme(sess.prog);
   var html = '';
 
+  /* Programme picker */
+  html += '<button class="prog-btn" data-act="programmes">' +
+    '<span class="grow"><span class="eyebrow">Programme</span><b>' + esc(prog.name) + '</b></span>' +
+    icon('swap') + '</button>';
+  if (prog.guide) html += '<p class="note prog-guide">' + esc(prog.guide) + '</p>';
+
   /* Day switcher */
-  html += '<div class="days">';
-  state.program.forEach(function (d, i) {
+  if (state.program.length > 1) html += '<div class="days">';
+  if (state.program.length > 1) state.program.forEach(function (d, i) {
     html += '<button class="day-chip" data-act="day" data-i="' + i + '" aria-pressed="' + (i === sess.day) + '">' +
       '<b>Day ' + (i + 1) + '</b><span>' + esc(shortTitle(d.title)) + '</span></button>';
   });
-  html += '</div>';
+  if (state.program.length > 1) html += '</div>';
 
   /* Progress rail */
   html += railHtml(sess, counts);
 
   /* Phase groups */
-  PHASES.forEach(function (phase, pi) {
-    var group = sess.exercises.filter(function (e) { return phaseOf(e.ex).key === phase.key; });
+  var shown = 0;
+  PHASES.forEach(function (phase) {
+    var group = sess.exercises.filter(function (e) { return phaseOfItem(e).key === phase.key; });
     if (!group.length) return;
+    shown++;
+    var circuit = phase.key === 'conditioning';
     html += '<section class="phase-group" style="--phase-c:' + phase.color + '">' +
-      '<div class="phase"><span class="idx">' + String(pi + 1).padStart(2, '0') + '</span>' +
-      '<span class="name">' + phase.label + '</span><span class="rule"></span></div>';
+      '<div class="phase"><span class="idx">' + String(shown).padStart(2, '0') + '</span>' +
+      '<span class="name">' + phase.label + '</span><span class="rule"></span></div>' +
+      (circuit && sess.wod ? '<p class="note wod">' + esc(sess.wod) + '</p>' : '');
     var i = 0;
     while (i < group.length) {
       var chain = [group[i]];
@@ -907,7 +1108,7 @@ function renderTrain() {
       i++;
       if (chain.length > 1) {
         html += '<div class="superset"><div class="ss-label">' + icon('link') +
-          'Superset \u00b7 alternate sets</div>' +
+          (circuit ? 'Circuit \u00b7 one set per station each round' : 'Superset \u00b7 alternate sets') + '</div>' +
           chain.map(function (e, n) { return cardHtml(e, n); }).join('') + '</div>';
       } else {
         html += cardHtml(chain[0]);
@@ -916,12 +1117,17 @@ function renderTrain() {
     html += '</section>';
   });
 
+  if (!sess.exercises.length) {
+    html += '<div class="empty"><b>Nothing here yet</b>Add exercises to build today\u2019s workout.</div>';
+  }
+  html += '<button class="chip add-ex" data-act="addex">' + icon('plus') + 'Add exercise</button>';
+
   /* Finish */
   html += finishHtml(sess, counts);
 
   var root = $('#view-train');
   root.innerHTML = html;
-  $('#topEyebrow').textContent = 'Day ' + (sess.day + 1) + ' · ' + new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+  $('#topEyebrow').textContent = (state.program.length > 1 ? 'Day ' + (sess.day + 1) + ' · ' : '') + new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
   $('#topTitle').textContent = sess.title;
 
   /* Selects can't carry their value through innerHTML reliably — set them here. */
@@ -955,7 +1161,7 @@ function railHtml(sess, counts) {
   PHASES.forEach(function (phase) {
     var t = 0, d = 0;
     sess.exercises.forEach(function (e) {
-      if (phaseOf(e.ex).key !== phase.key) return;
+      if (phaseOfItem(e).key !== phase.key) return;
       e.sets.forEach(function (st) { t++; if (st.done) d++; });
     });
     if (!t) return;
@@ -974,14 +1180,15 @@ function railHtml(sess, counts) {
 
 function cardHtml(e, ssIndex) {
   var ex = EX_BY_ID[e.ex] || { name: 'Unknown exercise', type: 'accessory', category: 'bw', note: '' };
-  var phase = phaseOf(e.ex);
+  var phase = phaseOfItem(e);
   var checkoff = isCheckoff(e.ex);
   var allDone = e.sets.length > 0 && e.sets.every(function (st) { return st.done; });
-  var last = lastPerformance(e.ex);
+  var last = lastPerformance(e.ex, state.session.prog) || lastPerformance(e.ex);
   var meta = ex.type + ' · ' + CATEGORIES[ex.category];
   if (last && last.set && last.set.w != null && !checkoff) {
     meta = 'Last: ' + fmtWeight(last.set.w) + ' × ' + esc(last.set.r) + ' · ' + relDate(last.date);
   }
+  if (e.t) meta = 'Tempo ' + e.t + ' · ' + meta;
 
   var rows = '';
   e.sets.forEach(function (st, i) {
@@ -1041,7 +1248,7 @@ function refreshRail() {
   PHASES.forEach(function (phase) {
     var t = 0, d = 0;
     sess.exercises.forEach(function (e) {
-      if (phaseOf(e.ex).key !== phase.key) return;
+      if (phaseOfItem(e).key !== phase.key) return;
       e.sets.forEach(function (st) { t++; if (st.done) d++; });
     });
     if (!t) return;
@@ -1081,6 +1288,10 @@ function renderHistory() {
   root.innerHTML = html;
 }
 
+function dayLabel(w) {
+  return defaultDays(w.prog).length > 1 ? 'Day ' + (w.day + 1) + ' · ' + shortTitle(w.title) : w.title;
+}
+
 function logHtml(w) {
   var s = sentiment(w.sentiment);
   var open = state.openLog === w.id;
@@ -1095,8 +1306,8 @@ function logHtml(w) {
   return '<div class="log" role="button" tabindex="0" data-act="log" data-id="' + w.id + '" aria-expanded="' + open + '">' +
     '<div class="log-head">' +
       '<span style="color:' + s.color + ';display:flex">' + icon(s.icon) + '</span>' +
-      '<div class="grow"><h3 class="title">Day ' + (w.day + 1) + ' · ' + esc(shortTitle(w.title)) + '</h3>' +
-      '<p class="body-s">' + relDate(w.date) + ' · felt ' + s.label.toLowerCase() + '</p></div>' +
+      '<div class="grow"><h3 class="title">' + esc(dayLabel(w)) + '</h3>' +
+      '<p class="body-s">' + esc(programme(w.prog).name) + ' · ' + relDate(w.date) + ' · felt ' + s.label.toLowerCase() + '</p></div>' +
       icon(open ? 'left' : 'right') +
     '</div>' +
     '<div class="log-figs">' +
@@ -1185,7 +1396,7 @@ function analyze(days) {
       var n = e.sets.length;
       if (ex.type === 'warmup' || ex.type === 'warmdown') { mobility += n; return; }
       if (ex.type === 'power') { powerSets += n; return; }
-      if (ex.category === 'bike') { conditioning += n; return; }
+      if (ex.category === 'bike' || e.ph === 'conditioning') { conditioning += n; return; }
       working += n;
       Object.keys(ex.muscles).forEach(function (k) {
         if (!(k in vol)) return;
@@ -1260,7 +1471,8 @@ function renderCoach() {
   html += '<div class="callout"><p class="eyebrow" style="color:var(--on-surface)">How these are counted</p>' +
     '<p>A set counts fully for the muscle an exercise trains directly and half for meaningful secondary work. ' +
     'Activation and cool-down movements count for nothing, and the ' + a.powerSets + ' power sets are tracked separately \u2014 ' +
-    'explosive work builds output, not much size.</p>' +
+    'explosive work builds output, not much size.' +
+    (a.conditioning ? ' The ' + a.conditioning + ' conditioning rounds and bike sets are left out too.' : '') + '</p>' +
     '<p>Weekly figures are averaged over the window, so a light week pulls them down.</p></div>';
 
   html += '<button class="filled" data-act="copybrief">' + icon('copy') + 'Copy brief for Claude</button>' +
@@ -1281,12 +1493,13 @@ function coachBrief(days) {
   L.push('## How to read my numbers');
   L.push('- Weekly sets are already computed. A set counts 1.0 for a muscle the exercise trains directly and 0.5 for meaningful secondary work.');
   L.push('- Warm-up and cool-down movements are excluded. Explosive/power sets (cleans, jumps, plyo push-ups) are counted separately and excluded from hypertrophy volume.');
+  L.push('- Conditioning circuit rounds and bike work are counted separately as conditioning and excluded from hypertrophy volume.');
   L.push('- Figures are averaged over the last ' + days + ' days (' + round1(a.weeks) + (a.weeks === 1 ? ' week' : ' weeks') + '), from ' + a.from + ' to ' + dateKey(new Date()) + '.');
   L.push('- Fractional secondary counting is a convention, not a finding. Say so if it is distorting anything.');
   L.push('');
   L.push('## Training frequency');
   L.push(a.sessions + ' sessions in the window (' + round1(a.sessionsPerWeek) + '/week), ' + a.working +
-    ' working sets, ' + a.powerSets + ' power sets, ' + a.mobility + ' mobility sets.');
+    ' working sets, ' + a.powerSets + ' power sets, ' + a.conditioning + ' conditioning sets, ' + a.mobility + ' mobility sets.');
   L.push('');
   L.push('## Weekly sets per muscle');
   a.rows.forEach(function (r) {
@@ -1295,7 +1508,7 @@ function coachBrief(days) {
   L.push('');
   L.push('## Sessions in this window');
   a.logs.slice(-8).forEach(function (w) {
-    L.push(w.date + ' \u00b7 Day ' + (w.day + 1) + ' \u00b7 ' + w.title + ' \u00b7 felt ' + sentiment(w.sentiment).label.toLowerCase());
+    L.push(w.date + ' \u00b7 ' + programme(w.prog).name + ' \u00b7 ' + dayLabel(w) + ' \u00b7 felt ' + sentiment(w.sentiment).label.toLowerCase());
     var mob = 0;
     w.exercises.forEach(function (e) {
       var ex = EX_BY_ID[e.ex];
@@ -1309,12 +1522,14 @@ function coachBrief(days) {
     if (mob) L.push('  (plus ' + mob + ' activation / cool-down sets)');
   });
   L.push('');
-  L.push('## My current programme');
+  L.push('## My current programme: ' + programme(state.meta.programme).name);
   state.program.forEach(function (d, i) {
-    L.push('Day ' + (i + 1) + ' — ' + d.title);
+    L.push('Day ' + (i + 1) + ' — ' + d.title + (d.wod ? ' (conditioning: ' + d.wod + ')' : ''));
     d.items.forEach(function (item) {
       var ex = EX_BY_ID[item.ex];
       if (ex) L.push('  ' + ex.name + ' ' + item.sets + '\u00d7' + item.reps +
+        (item.t ? ' at tempo ' + item.t : '') +
+        (item.ph === 'conditioning' ? ' (conditioning circuit)' : '') +
         (item.su ? ' (supersetted with the next exercise)' : ''));
     });
   });
@@ -1402,7 +1617,7 @@ function openExerciseMenu(u) {
   if (!e) return;
   var ex = EX_BY_ID[e.ex] || {};
   openSheet('<h2>' + esc(ex.name || 'Exercise') + '</h2>' +
-    '<p class="body-s">' + esc(phaseOf(e.ex).label) + ' · ' + e.sets.length + ' sets</p>' +
+    '<p class="body-s">' + esc(phaseOfItem(e).label) + ' · ' + e.sets.length + ' sets</p>' +
     '<div class="sheet-list" style="margin-top:12px">' +
       (canSuperset(u) ? '<button class="rowbtn" data-act="superset" data-uid="' + u + '">' + icon('link') +
         (e.su ? 'Break the superset' : 'Superset with the next exercise') + '</button>' : '') +
@@ -1417,23 +1632,24 @@ function openExerciseMenu(u) {
 function canSuperset(u) {
   var e = findEx(u);
   if (!e) return false;
-  var phase = phaseOf(e.ex).key;
-  var group = state.session.exercises.filter(function (item) { return phaseOf(item.ex).key === phase; });
+  var phase = phaseOfItem(e).key;
+  var group = state.session.exercises.filter(function (item) { return phaseOfItem(item).key === phase; });
   var idx = group.indexOf(e);
   return idx > -1 && idx < group.length - 1;
 }
 
-var swapState = { uid: null, cat: 'all', q: '' };
+var swapState = { uid: null, cat: 'all', q: '', add: false };
 
+/* With no uid the picker adds a new exercise instead of swapping one. */
 function openSwap(u) {
-  swapState = { uid: u, cat: 'all', q: '' };
-  var e = findEx(u);
-  var ex = EX_BY_ID[e.ex] || {};
+  swapState = { uid: u || null, cat: 'all', q: '', add: !u };
+  var e = u ? findEx(u) : null;
+  var ex = (e && EX_BY_ID[e.ex]) || {};
   var chips = '<button class="chip" data-act="cat" data-cat="all" aria-pressed="true">All</button>';
   Object.keys(CATEGORIES).forEach(function (c) {
     chips += '<button class="chip" data-act="cat" data-cat="' + c + '" aria-pressed="false">' + esc(CATEGORIES[c]) + '</button>';
   });
-  openSheet('<h2>Swap ' + esc(ex.name || 'exercise') + '</h2>' +
+  openSheet('<h2>' + (swapState.add ? 'Add exercise' : 'Swap ' + esc(ex.name || 'exercise')) + '</h2>' +
     '<p class="body-s">Only kit you own is listed.</p>' +
     '<div class="filters">' + chips + '</div>' +
     '<input class="search" id="swapSearch" type="search" placeholder="Search exercises" autocomplete="off">' +
@@ -1457,6 +1673,19 @@ function renderSwapList() {
       (ex.id === current ? icon('check') : '') + '</button>';
   }).join('');
   $('#swapList').innerHTML = html || '<div class="empty"><b>Nothing matches</b>Try another filter or search term.</div>';
+}
+
+function openProgrammes() {
+  var current = state.session.prog;
+  openSheet('<h2>Programmes</h2><p class="body-s">Each programme keeps its own days, edits and rotation.</p>' +
+    '<div class="sheet-list" style="margin-top:12px">' +
+    PROGRAMMES.map(function (p) {
+      var days = p.days.length;
+      return '<button class="opt' + (p.id === current ? ' current' : '') + '" data-act="setprog" data-id="' + p.id + '">' +
+        '<span class="grow"><b>' + esc(p.name) + '</b><small>' + esc(p.blurb) +
+        (days > 1 ? ' · ' + days + ' days' : '') + '</small></span>' +
+        (p.id === current ? icon('check') : '') + '</button>';
+    }).join('') + '</div>');
 }
 
 function openSettings() {
@@ -1486,8 +1715,10 @@ function handleImport(ev) {
       var data = JSON.parse(reader.result);
       if (!data || !Array.isArray(data.history)) throw new Error('bad');
       state.history = normalizeHistory(data.history);
-      if (Array.isArray(data.program) && data.program.length) state.program = data.program;
-      state.meta = data.meta || state.meta;
+      if (data.programs && typeof data.programs === 'object') state.programs = data.programs;
+      else if (Array.isArray(data.program) && data.program.length) state.programs = { strength: data.program };
+      state.meta = normalizeMeta(data.meta || state.meta);
+      loadProgramme(state.meta.programme);
       state.session = null;
       saveHistory(); saveProgram(); saveMeta(); Store.del(K.session);
       closeSheet(); setView('history');
@@ -1501,8 +1732,8 @@ function handleImport(ev) {
 
 function exportData() {
   var blob = new Blob([JSON.stringify({
-    app: 'home-gym-tracker', version: 1, exported: new Date().toISOString(),
-    program: state.program, history: state.history, meta: state.meta
+    app: 'home-gym-tracker', version: 2, exported: new Date().toISOString(),
+    programs: state.programs, history: state.history, meta: state.meta
   }, null, 2)], { type: 'application/json' });
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
@@ -1517,16 +1748,18 @@ function saveWorkout() {
   var sess = state.session, counts = sessionCounts(sess);
   if (!sess.sentiment || !counts.done) return;
   var exercises = sess.exercises.map(function (e) {
-    return { ex: e.ex, sets: e.sets.filter(function (st) { return st.done; }).map(function (st) { return { w: st.w, r: st.r }; }) };
+    var out = { ex: e.ex, sets: e.sets.filter(function (st) { return st.done; }).map(function (st) { return { w: st.w, r: st.r }; }) };
+    if (e.ph) out.ph = e.ph;
+    return out;
   }).filter(function (e) { return e.sets.length; });
 
   state.history.push({
     id: uid(), date: dateKey(new Date()), ts: Date.now(),
-    day: sess.day, title: sess.title, sentiment: sess.sentiment,
+    prog: sess.prog, day: sess.day, title: sess.title, sentiment: sess.sentiment,
     exercises: exercises,
     totals: { exercises: exercises.length, sets: counts.done, volume: Math.round(counts.volume) }
   });
-  state.meta.lastDay = sess.day;
+  state.meta.lastDayBy[sess.prog] = sess.day;
   state.session = null;
   saveHistory(); saveMeta(); Store.del(K.session);
   setView('history');
@@ -1627,6 +1860,24 @@ document.addEventListener('click', function (ev) {
     }
     case 'menu': openExerciseMenu(u); break;
     case 'swap': openSwap(u); break;
+    case 'addex': openSwap(null); break;
+    case 'programmes': openProgrammes(); break;
+    case 'setprog': {
+      var pid = btn.dataset.id;
+      if (pid === state.session.prog) { closeSheet(); return; }
+      var done = sessionCounts(state.session).done;
+      var switchProg = function () {
+        loadProgramme(pid);
+        state.session = buildSession(suggestedDay());
+        saveMeta(); saveSession(); closeSheet(); setView('train');
+        toast(programme(pid).name);
+      };
+      if (done > 0) {
+        confirmSheet('Switch to ' + programme(pid).name + '?',
+          'The ' + done + ' sets you logged today will be discarded.', 'Switch programme', switchProg, true);
+      } else switchProg();
+      break;
+    }
     case 'cat':
       swapState.cat = btn.dataset.cat;
       sheetEl.querySelectorAll('[data-act="cat"]').forEach(function (c) {
@@ -1635,10 +1886,18 @@ document.addEventListener('click', function (ev) {
       renderSwapList();
       break;
     case 'pick': {
+      if (swapState.add) {
+        var picked = btn.dataset.id;
+        var warm = isCheckoff(picked);
+        state.session.exercises.push(newSessionItem({ ex: picked, sets: warm ? 1 : 3, reps: warm ? '1' : '10' }, state.session.prog));
+        saveSession(); closeSheet(); renderTrain();
+        toast((EX_BY_ID[picked] || {}).name + ' added');
+        break;
+      }
       var target = findEx(swapState.uid);
       if (target) {
         target.ex = btn.dataset.id;
-        var lp = lastPerformance(target.ex);
+        var lp = lastPerformance(target.ex, state.session.prog);
         target.sets.forEach(function (st2) {
           st2.done = false;
           st2.w = isCheckoff(target.ex) ? null : (lp && lp.set ? lp.set.w : null);
@@ -1674,7 +1933,7 @@ document.addEventListener('click', function (ev) {
       openSheet('<h2>' + new Date(day + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' }) + '</h2>' +
         logs.map(function (w) {
           var s2 = sentiment(w.sentiment);
-          return '<div style="margin-top:14px"><p class="eyebrow" style="color:' + s2.color + '">Day ' + (w.day + 1) + ' · felt ' + s2.label.toLowerCase() + '</p>' +
+          return '<div style="margin-top:14px"><p class="eyebrow" style="color:' + s2.color + '">' + esc(programme(w.prog).name) + ' · felt ' + s2.label.toLowerCase() + '</p>' +
             '<h3 class="title">' + esc(w.title) + '</h3>' +
             '<p class="body-s">' + w.totals.sets + ' sets · ' + w.totals.exercises + ' exercises · ' + fmtNum(w.totals.volume) + ' kg</p></div>';
         }).join(''));
@@ -1683,16 +1942,19 @@ document.addEventListener('click', function (ev) {
     case 'savelayout': {
       var sess2 = state.session;
       state.program[sess2.day].items = sess2.exercises.map(function (e2) {
-        return { ex: e2.ex, sets: e2.sets.length, reps: e2.sets[0] ? e2.sets[0].r : '8', su: !!e2.su };
+        var item = { ex: e2.ex, sets: e2.sets.length, reps: e2.sets[0] ? e2.sets[0].r : '8', su: !!e2.su };
+        if (e2.t) item.t = e2.t;
+        if (e2.ph) item.ph = e2.ph;
+        return item;
       });
       saveProgram(); closeSheet();
-      toast('Day ' + (sess2.day + 1) + ' updated');
+      toast(state.program.length > 1 ? 'Day ' + (sess2.day + 1) + ' updated' : 'Layout saved');
       break;
     }
     case 'resetday':
       confirmSheet('Reset Day ' + (state.session.day + 1) + '?', 'Restores the original exercises and set counts.', 'Reset day', function () {
         var d = state.session.day;
-        state.program[d] = clone(DEFAULT_PROGRAM[d]);
+        state.program[d] = clone(defaultDays(state.meta.programme)[d]);
         state.session = buildSession(d);
         saveProgram(); saveSession(); closeSheet(); setView('train');
         toast('Day ' + (d + 1) + ' reset');
@@ -1717,7 +1979,8 @@ document.addEventListener('click', function (ev) {
     case 'import': $('#importFile').click(); break;
     case 'clearall':
       confirmSheet('Delete everything?', 'All saved workouts and programme edits on this device. This cannot be undone.', 'Delete everything', function () {
-        state.history = []; state.program = clone(DEFAULT_PROGRAM); state.meta = { lastDay: null }; state.session = null;
+        state.history = []; state.programs = {}; state.meta = normalizeMeta({}); state.session = null;
+        loadProgramme('strength');
         saveHistory(); saveProgram(); saveMeta(); Store.del(K.session);
         state.openLog = null; closeSheet(); setView('train');
         toast('Everything cleared');
@@ -1751,11 +2014,15 @@ function normalizeHistory(list) {
       w.id = w.id || uid();
       w.ts = w.ts || Date.now();
       w.date = w.date || dateKey(new Date(w.ts));
+      w.prog = PROG_BY_ID[w.prog] ? w.prog : 'strength';
       w.day = typeof w.day === 'number' ? w.day : 0;
-      w.title = w.title || (DEFAULT_PROGRAM[w.day] || DEFAULT_PROGRAM[0]).title;
+      var days = defaultDays(w.prog);
+      w.title = w.title || (days[w.day] || days[0]).title;
       w.sentiment = w.sentiment || 'okay';
       w.exercises = w.exercises.map(function (e) {
-        return { ex: e.ex, sets: Array.isArray(e.sets) ? e.sets : [] };
+        var out = { ex: e.ex, sets: Array.isArray(e.sets) ? e.sets : [] };
+        if (e.ph) out.ph = e.ph;
+        return out;
       });
       if (!w.totals) {
         var sets = 0, vol = 0;
