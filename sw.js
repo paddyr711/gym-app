@@ -1,6 +1,6 @@
 /* Network-first app shell: always load the latest version when online,
    fall back to the cached copy offline. Bump CACHE when you change any file. */
-var CACHE = 'home-gym-v6';
+var CACHE = 'home-gym-v8';
 var SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', function (e) {
